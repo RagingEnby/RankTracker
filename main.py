@@ -105,6 +105,7 @@ def DO_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
     
 
 def SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK):
+  print('sending webhook...')
   embed = {
   "content": "<@&1122272183733977249>",
   "embeds": [
@@ -132,6 +133,8 @@ def SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK):
     print(e)
     time.sleep(10)
     SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
+
+  print('sent webhook!')
 
 while True:
   print('Starting scan...')
