@@ -50,7 +50,7 @@ def compare_rank_data(scan_rank, new_data, old_data):
         if uuid not in new_players:
             rank_change = True
             print(f"{ign} has lost [{scan_rank.upper()}] rank")
-            SEND_UPDATE_WEBHOOK(ign, scan_rank, "removed", ign)
+            DO_UPDATE_WEBHOOK(ign, scan_rank, "removed", ign)
         elif new_players[uuid] != ign:
           print('new_players[uuid] != ign')
           print(f'{new_players[uuid]} != {ign}')
@@ -59,7 +59,7 @@ def compare_rank_data(scan_rank, new_data, old_data):
           if mojang_response_ign == new_players[uuid]:
             rank_change = True
             print(f"[{scan_rank.upper()}] {ign} has changed their username to {scan_rank} {new_players[uuid]}")
-            SEND_UPDATE_WEBHOOK(new_players[uuid], scan_rank, "changed", ign)
+            DO_UPDATE_WEBHOOK(new_players[uuid], scan_rank, "changed", ign)
           else:
             print('mojang_response_ign != new_players[uuid]')
             print(f'{mojang_response_ign} != {new_players[uuid]}')
@@ -68,7 +68,7 @@ def compare_rank_data(scan_rank, new_data, old_data):
         if uuid not in old_players:
           rank_change = True
           print(f"{ign} now has [{scan_rank.upper()}] rank")            
-          SEND_UPDATE_WEBHOOK(ign, scan_rank, "added", ign)
+          DO_UPDATE_WEBHOOK(ign, scan_rank, "added", ign)
     if rank_change:
       with open(f'{CSV_DIR}/{scan_rank}.csv', 'a') as file:
         file.write(f'{date.today().strftime("%m/%d/%y")},{len(new_players)}\n')
@@ -77,7 +77,7 @@ def compare_rank_data(scan_rank, new_data, old_data):
 
 
 # IGN, admin/gm/youtube, added/removed/changed, OLD_IGN
-def SEND_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
+def DO_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
   if rank == "admin": 
     WEBHOOK = "https://discord.com/api/webhooks/1121130635021529260/UoZ0FFH7zEFLoMtDgDp0u0LkrbUMFpVnq1_9PdNhJYGwaR8DKY-PkyZt19Xz19fCcrev"
     embed_color = 16733525
@@ -100,8 +100,11 @@ def SEND_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
     title = f"{player} now has [{rank_upper}] rank!"
   elif status == "changed":
     title = f"{OLD_IGN} has changed their IGN to {player}"
+
+  SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
     
-    
+
+def SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK):
   embed = {
   "content": "<@&1122272183733977249>",
   "embeds": [
@@ -122,11 +125,13 @@ def SEND_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
   "username": BOT_NAME,
   "avatar_url": BOT_AVATAR
   }
-  payload_json = json.dumps(embed)
-  response = requests.post(WEBHOOK,
-                           data=payload_json,
-                           headers={"Content-Type": "application/json"})
-  print(response)
+  try:
+    response = requests.post(WEBHOOK, data=json.dumps(embed), headers={"Content-Type": "application/json"})
+    print(response)
+  except Exception as e:
+    print(e)
+    time.sleep(10)
+    SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
 
 while True:
   print('Starting scan...')
