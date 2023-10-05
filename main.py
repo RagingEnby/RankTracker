@@ -152,4 +152,4 @@ while True:
     for scan_rank in SCAN_RANKS:
       save_rank_data(scan_rank, fetch_rank_data(scan_rank))
   print('Finished scan!\n')
-  time.sleep(20)
+  time.sleep(240)
