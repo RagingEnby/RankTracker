@@ -35,12 +35,16 @@ def save_rank_data(scan_rank, data):
 
 def load_rank_data(scan_rank):
     file_path = os.path.join(f"{RANKS_DIR}/{scan_rank}.json")
-    if os.path.exists(file_path):
+    try:
         with open(file_path, "r") as file:
             return json.load(file)
             file.close()
-    else:
-        return None
+    except Exception as e:
+        print(f'Error while loading {scan_rank}: {e}')
+        rank_data = fetch_rank_data(scan_rank)
+        with open(file_path, 'w') as file:
+            json.dump(rank_data, file, indent=2)
+        return rank_data
 
 def compare_rank_data(scan_rank, new_data, old_data):
     new_players = {player["uuid"]: player["ign"] for player in new_data}

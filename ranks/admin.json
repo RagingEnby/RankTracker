@@ -4,14 +4,6 @@
     "uuid": "aafc28b6-3267-4b06-9c8a-5ff2a2ebdbab"
   },
   {
-    "ign": "Mason",
-    "uuid": "3bf95683-b999-439d-9556-33d1d1e493c2"
-  },
-  {
-    "ign": "CodePunisher",
-    "uuid": "d2a3cd2e-5897-45cd-8a2d-6b46ac6f50aa"
-  },
-  {
     "ign": "Heatran",
     "uuid": "8bb6dd7f-b3de-43ec-af7e-1be7975e7bca"
   },
@@ -84,6 +76,10 @@
     "uuid": "69de4c87-f9ea-4f22-9851-6e33c4b67a35"
   },
   {
+    "ign": "BattleDash",
+    "uuid": "fccd163d-444a-4650-a99b-92c7b11de2cb"
+  },
+  {
     "ign": "Minikloon",
     "uuid": "20934ef9-488c-4651-80a7-8f861586b4cf"
   },
@@ -106,6 +102,10 @@
   {
     "ign": "Pensul",
     "uuid": "78800595-c0e9-4455-95ac-4a93fa2a3a4c"
+  },
+  {
+    "ign": "2008Choco",
+    "uuid": "73c62196-2af7-463d-8be1-a7a2270f4696"
   },
   {
     "ign": "Bloozing",
@@ -154,10 +154,6 @@
   {
     "ign": "Fadest",
     "uuid": "da31873c-2799-4202-ac75-be58a2a7602e"
-  },
-  {
-    "ign": "heatseeker0",
-    "uuid": "02754d1d-fe13-44ca-8ca7-980e93996b0c"
   },
   {
     "ign": "Hulk_",
