@@ -3,16 +3,17 @@ import json
 import os
 import time
 from datetime import date
+import aiohttp
+import asyncio
 
 #print('getting credits footer')
 #CREDITS_FOOTER = requests.get('https://raw.githubusercontent.com/RagingEnby/SkypixelRepo/main/credit_footer.txt').text
 CREDITS_FOOTER = 'Made by @ragingenby'
 #print('got credits footer!\n\n')
 CREDITS_IMAGE = 'https://github.com/RagingEnby/SkypixelRepo/blob/main/pfp.png?raw=true'
-
-API_URL = "https://api.antisniper.net/v2/resources/ranks?rank={}&key={}"
-SCAN_RANKS = ["gm", "admin", "youtube"]
 ANTISNIPER_API_KEY = 'dddaff83-4b8a-4e0b-931b-51915afc5556'
+API_URL = "https://api.antisniper.net/v2/resources/ranks?rank={}&key=" + ANTISNIPER_API_KEY
+SCAN_RANKS = ["gm", "admin", "youtube"]
 BOT_NAME = "Skypixel"
 BOT_AVATAR = "https://github.com/RagingEnby/SkypixelRepo/blob/main/skypixel.png?raw=true"
 RANKS_DIR = "ranks/"
@@ -20,25 +21,25 @@ RANKS_HISTORY_DIR = "ranks/history/"
 CSV_DIR = "ranks/spreadsheets/"
 FIRST_EVER_RUN = False
 
-def fetch_rank_data(scan_rank):
-  url = API_URL.format(scan_rank, ANTISNIPER_API_KEY)
-  response = requests.get(url)
-  if response.status_code == 200:
-    return response.json()["data"]
-  else:
-    return load_rank_data(scan_rank)
+async def fetch_rank_data(scan_rank):
+  url = API_URL.format(scan_rank)
+  async with aiohttp.ClientSession() as session:
+      async with session.get(url) as response:
+        if response.status == 200:
+            data = await response.json()
+            return data['data']
+        else:
+            return await load_rank_data(scan_rank)
   
-def save_rank_data(scan_rank, data):
+async def save_rank_data(scan_rank, data):
     with open(f"{RANKS_DIR}/{scan_rank}.json", "w") as file:
       json.dump(data, file, indent=2)
-      file.close()
 
-def load_rank_data(scan_rank):
+async def load_rank_data(scan_rank):
     file_path = os.path.join(f"{RANKS_DIR}/{scan_rank}.json")
     try:
         with open(file_path, "r") as file:
             return json.load(file)
-            file.close()
     except Exception as e:
         print(f'Error while loading {scan_rank}: {e}')
         rank_data = fetch_rank_data(scan_rank)
@@ -81,7 +82,7 @@ def compare_rank_data(scan_rank, new_data, old_data):
 
 
 # IGN, admin/gm/youtube, added/removed/changed, OLD_IGN
-def DO_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
+async def DO_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
   if rank == "admin": 
     WEBHOOK = "https://discord.com/api/webhooks/1121130635021529260/UoZ0FFH7zEFLoMtDgDp0u0LkrbUMFpVnq1_9PdNhJYGwaR8DKY-PkyZt19Xz19fCcrev"
     embed_color = 16733525
@@ -105,10 +106,10 @@ def DO_UPDATE_WEBHOOK(player, rank, status, OLD_IGN):
   elif status == "changed":
     title = f"{OLD_IGN} has changed their IGN to {player}"
 
-  SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
+  await SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
     
 
-def SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK):
+async def SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK):
   print('sending webhook...')
   embed = {
   "content": "<@&1122272183733977249>",
@@ -130,30 +131,30 @@ def SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK):
   "username": BOT_NAME,
   "avatar_url": BOT_AVATAR
   }
-  try:
-    response = requests.post(WEBHOOK, data=json.dumps(embed), headers={"Content-Type": "application/json"})
-    print(response)
-  except Exception as e:
-    print(e)
-    time.sleep(10)
-    SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
+  async with aiohttp.ClientSession() as session:
+    try:
+        async with session.post(WEBHOOK, data=json.dumps(embed), headers={"Content-Type": "application/json"}) as response:
+            print(response.status)
+            if response.status not in [200, 204]:
+                await asyncio.sleep(10)
+                await SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
+    except Exception as e:
+        print(e)
+        await asyncio.sleep(10)
+        await SEND_UPDATE_WEBHOOK(title, embed_color, player, WEBHOOK)
 
   print('sent webhook!')
 
+async def main():
+    for scan_rank in SCAN_RANKS:
+        print(f'Scanning [{scan_rank.upper()}] rank')
+        old_data = await load_rank_data(scan_rank)
+        new_data = await fetch_rank_data(scan_rank)
+        if old_data != new_data:
+            await save_rank_data(scan_rank, new_data)
+            await compare_rank_data(scan_rank, new_data, old_data)
+        print(f"Scanned [{scan_rank.upper()}] rank")
+
 while True:
-  print('Starting scan...')
-  if not FIRST_EVER_RUN:
-    for scan_rank in SCAN_RANKS:
-      print(f'Scanning [{scan_rank.upper()}] rank')
-      old_data = load_rank_data(scan_rank)
-      if old_data is not None:
-        new_data = fetch_rank_data(scan_rank)
-        save_rank_data(scan_rank, new_data)
-        if new_data is not None:
-          compare_rank_data(scan_rank, new_data, old_data)
-  else:
-    print('First run detected!')
-    for scan_rank in SCAN_RANKS:
-      save_rank_data(scan_rank, fetch_rank_data(scan_rank))
-  print('Finished scan!\n')
-  time.sleep(240)
+    asyncio.run(main())
+    time.sleep(240)
